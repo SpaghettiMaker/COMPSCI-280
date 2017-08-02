@@ -1,4 +1,4 @@
 __author__ = 'jerry'
-b = 1
+asd = 1
 
 # this is a test file
