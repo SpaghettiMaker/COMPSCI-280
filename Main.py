@@ -67,26 +67,18 @@ class Login2:
         self.screen_size = screen_size
         self.root = root
         self.root.title("noi")
-        self.master = ttk.Frame(root)
         self.frame = ttk.Frame(self.root, width=self.screen_size[0], height=self.screen_size[1])
-        self.text = ''''''
-        # dictionary for button sizes and colours when mouse hovers over
-        self.font = {"Arial 25": "Arial 20", "Arial 20": "Arial 25"}
-        self.colour = {"red": "blue", "blue": "red"}
-        self.ok = ttk.Button(self.master, text="Okay", command=lambda: self.buttonclick())
-        self.state = True
-        self.start()
 
-    def start(self):
-        self.master.grid(column=0, row=0)
-        self.frame.grid(column=0, row=0, columnspan=10, rowspan=10)
-        self.ok.grid(column=3, row=3)
+        self.ok = ttk.Button(self.root, text="Okay", command=lambda: self.buttonclick())
+        self.state = True
 
     def buttonclick(self):
         print("hi")
 
     def grid(self):  # packs canvas onto screen
         self.frame.grid()
+        self.frame.grid(column=0, row=0, columnspan=10, rowspan=10)
+        self.ok.grid(column=5, row=5)
 
     def forget(self):  # forgets the canvas
         self.frame.grid_forget()
