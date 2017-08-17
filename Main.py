@@ -8,89 +8,107 @@ class LibrarySys:  ###IMPORTANT### Do not close toplevel screens use "return" bu
     def __init__(self):
         self.root = Tk()
         self.screen_size = (400, 400)
-        self.login = Login(self.screen_size, self.root)
-        self.login.pack()
-        self.root.mainloop()
-        print(self.login.getit())
+        self.style = ttk.Style()
 
-        self.login2 = Login2(self.screen_size, self.root)
-        self.login2.grid()
+        self.login = Login(self.screen_size, self.root, self.style)
+        self.login.grid()
+        self.root.mainloop()
+        print(self.login.get_state())
+        self.treeview = TreeView(self.root)
+        self.treeview.pack_tree()
         self.root.mainloop()
 
 
 class Login:
-    def __init__(self, screen_size, window):
-        self.screen_size = screen_size
-        self.window = window
-        self.window.title("Login")
-        self.canvas = Canvas(self.window, width=self.screen_size[0], height=self.screen_size[1], bg='white')
-        self.text = ''''''
-        # dictionary for button sizes and colours when mouse hovers over
-        self.font = {"Arial 25": "Arial 20", "Arial 20": "Arial 25"}
-        self.colour = {"red": "blue", "blue": "red"}
-        self.canvas.create_text(self.screen_size[0] // 2, self.screen_size[1] // 6,
-                                text='Login', fill="blue", font=("arial", 40))
-        self.state = True
-        self.start()
-
-    def start(self):
-        # buttons on the screen
-
-        self.login_button = self.canvas.create_text(self.screen_size[0]//2, self.screen_size[1] - self.screen_size[1]//5, text="Login", font=("Arial", 20), fill="blue")
-        self.canvas.tag_bind(self.login_button, '<Button-1>', self.login)
-        self.canvas.tag_bind(self.login_button, '<Enter>', lambda x: self.change_font(self.login_button))
-        self.canvas.tag_bind(self.login_button, '<Leave>', lambda x: self.change_font(self.login_button))
-        self.canvas.update()
-
-    def change_font(self, button):  # changes the colour of the  button when mouse hovers over the button
-        self.canvas.itemconfig(button, font=self.font[self.canvas.itemcget(button, "font")])
-        self.canvas.itemconfig(button, fill=self.colour[self.canvas.itemcget(button, "fill")])
-
-    def pack(self):  # packs canvas onto screen
-        self.canvas.pack()
-
-    def forget(self):  # forgets the canvas
-        self.canvas.pack_forget()
-
-    def login(self, event):
-
-        self.forget()
-        self.window.quit()
-        self.state = False
-
-    def getit(self):
-        return self.state
-
-
-class Login2:
-    def __init__(self, screen_size, root):
+    def __init__(self, screen_size, root, style):
         self.screen_size = screen_size
         self.root = root
-        self.root.title("noi")
-        self.frame = ttk.Frame(self.root, width=self.screen_size[0], height=self.screen_size[1])
+        self.root.title("boi image is just a placeholder")
+        self.style = style
+        self.style.configure("BW.Label", background="white")
+        self.frame = ttk.Frame(self.root, width=self.screen_size[0], height=self.screen_size[1], style="BW.Label")
 
-        self.ok = ttk.Button(self.root, text="Okay", command=lambda: self.buttonclick())
-        self.state = True
+        self.login_button = ttk.Button(self.root, text="Login", command=lambda: self.login())
 
-    def buttonclick(self):
-        print("hi")
+        self.default_username = StringVar(self.root, value='Enter Username')
+        self.username = ttk.Entry(self.root, textvariable=self.default_username)
+
+        self.default_password = StringVar(self.root, value='Enter Password')
+        self.password = ttk.Entry(self.root, textvariable=self.default_password)
+
+        self.is_admin = False
+
+        self.photo = PhotoImage(file="placeholder.gif")
+        self.logo = Label(image=self.photo)
+        self.logo.image = self.photo  # keep a reference!
 
     def grid(self):  # packs canvas onto screen
-        self.frame.grid()
         self.frame.grid(column=0, row=0, columnspan=10, rowspan=10)
-        self.ok.grid(column=5, row=5)
+        self.login_button.grid(column=5, row=9)
+        self.username.grid(column=5, row=6)
+        self.password.grid(column=5, row=7)
+        self.logo.grid(column=5, row=0)
 
-    def forget(self):  # forgets the canvas
+    def forget(self):  # forgets the Frame
         self.frame.grid_forget()
+        self.login_button.grid_forget()
+        self.password.grid_forget()
+        self.username.grid_forget()
+        self.logo.grid_forget()
 
-    def login(self, event):
+    def login(self):
+        username = self.username.get()
+        password = self.password.get()
+        print("username is:", username, "password is:", password)
+        # Admin will be True and user will be False
         self.forget()
         self.root.quit()
-        self.state = False
+        self.is_admin = True
 
-    def getit(self):
-        return self.state
+    def get_state(self):
+        return self.is_admin
 
+
+class TreeView:
+    def __init__(self, root):
+        self.root = root
+        self.frame = ttk.Frame(self.root, height=500)
+
+        self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3", "4", "5", "6"), show=("headings")) # show headings means that a 'label' column (tree) is hidden
+        self.tree.heading("1", text="Title")
+        self.tree.heading("2", text="Genre")
+        self.tree.heading("3", text="Age Restriction")
+        self.tree.heading("4", text="Console")
+        self.tree.heading("5", text="Price")
+        self.tree.heading("6", text="Stock")
+
+        self.tree.insert("", "end", values=(1, 2, 3, 4, 5, 6))
+        self.entries = []
+        self.box_text = ["Title", "Genre", "Age Restriction", "Console", "Price", "Stock"]
+        for i in self.box_text:
+            self.entries.append(Entry(self.frame))
+
+        self.entry = Entry(self.frame)
+
+    def on_double_click(self, event):
+        index = self.tree.selection()
+        print("you clicked on", self.tree.item(index)["values"])
+
+    def button_click(self):
+        index = self.tree.selection()
+        print("you clicked on", self.tree.item(index)["values"])
+
+    def get_selected_items(self):
+        return self.tree.item(self.tree.selection())["values"]
+
+    def pack_tree(self):
+        self.frame.pack()
+        scrollbar = ttk.Scrollbar(self.frame, command=self.tree.yview)
+        scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+        # packs the scrollbar beside the treeview object. If you want to keep them together, put both in a frame
+        self.tree.config(yscrollcommand=scrollbar.set)  # makes the scroll bar the correct size
+        self.tree.bind("<Double-1>", self.on_double_click)
+        self.tree.pack(side=tk.LEFT)
 
 if __name__ == "__main__":
     LibrarySys()
