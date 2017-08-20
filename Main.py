@@ -4,20 +4,36 @@ from tkinter import messagebox
 import tkinter.ttk as ttk
 
 
-class LibrarySys:  ###IMPORTANT### Do not close toplevel screens use "return" button
+class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
     def __init__(self):
         self.root = Tk()
         self.screen_size = (400, 400)
         self.style = ttk.Style()
 
         self.login = Login(self.screen_size, self.root, self.style)
+        self.treeview = TreeView(self.root)
+
+        try:
+            while True:
+                self.start()
+        except:
+            pass
+
+    def start(self):
         self.login.grid()
         self.root.mainloop()
-        print(self.login.get_state())
-        self.treeview = TreeView(self.root)
-        self.treeview.pack_tree()
-        self.root.mainloop()
+        temp = self.login.get_state()  # if True show Librarianview if False show Userview
+        print(temp)
+        if temp:
+            self.show_librarianview()
+        else:
+            pass
+        return
 
+    def show_librarianview(self):
+        self.treeview.grid_tree()
+        self.root.mainloop()
+        return
 
 class Login:
     def __init__(self, screen_size, root, style):
@@ -55,6 +71,7 @@ class Login:
         self.password.grid_forget()
         self.username.grid_forget()
         self.logo.grid_forget()
+        self.root.quit()
 
     def login(self):
         username = self.username.get()
@@ -62,7 +79,6 @@ class Login:
         print("username is:", username, "password is:", password)
         # Admin will be True and user will be False
         self.forget()
-        self.root.quit()
         self.is_admin = True
 
     def get_state(self):
@@ -74,25 +90,28 @@ class TreeView:
         self.root = root
         self.frame = ttk.Frame(self.root, height=500)
 
-        self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3", "4", "5", "6"), show=("headings")) # show headings means that a 'label' column (tree) is hidden
+        self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3", "4", "5", "6"), show=("headings"))  # show headings means that a 'label' column (tree) is hidden
         self.tree.heading("1", text="Title")
-        self.tree.heading("2", text="Genre")
-        self.tree.heading("3", text="Age Restriction")
-        self.tree.heading("4", text="Console")
-        self.tree.heading("5", text="Price")
+        self.tree.heading("2", text="Author")
+        self.tree.heading("3", text="Genre")
+        self.tree.heading("4", text="Date of Release")
+        self.tree.heading("5", text="Location")
         self.tree.heading("6", text="Stock")
 
-        self.tree.insert("", "end", values=(1, 2, 3, 4, 5, 6))
-        self.entries = []
-        self.box_text = ["Title", "Genre", "Age Restriction", "Console", "Price", "Stock"]
-        for i in self.box_text:
-            self.entries.append(Entry(self.frame))
+        self.scrollbar = ttk.Scrollbar(self.frame, command=self.tree.yview)
+        self.logout_button = ttk.Button(self.root, text="Exit", command=lambda: self.logout())
 
-        self.entry = Entry(self.frame)
+        self.tree.insert("", "end", values=(1, 2, 3, 4, 5, 6))
+        self.tree.config(yscrollcommand=self.scrollbar.set)  # makes the scroll bar the correct size
+        self.tree.bind("<Double-1>", self.on_double_click)
 
     def on_double_click(self, event):
         index = self.tree.selection()
-        print("you clicked on", self.tree.item(index)["values"])
+        region = self.tree.identify("region", event.x, event.y)
+        if region == "heading":  # if clicked on treeview heading
+            print("hi")
+        else:
+            print("you clicked on", self.tree.item(index)["values"])
 
     def button_click(self):
         index = self.tree.selection()
@@ -101,14 +120,23 @@ class TreeView:
     def get_selected_items(self):
         return self.tree.item(self.tree.selection())["values"]
 
-    def pack_tree(self):
+    def grid_tree(self):
         self.frame.pack()
-        scrollbar = ttk.Scrollbar(self.frame, command=self.tree.yview)
-        scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+        self.logout_button.pack(side=tk.BOTTOM)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         # packs the scrollbar beside the treeview object. If you want to keep them together, put both in a frame
-        self.tree.config(yscrollcommand=scrollbar.set)  # makes the scroll bar the correct size
-        self.tree.bind("<Double-1>", self.on_double_click)
+
         self.tree.pack(side=tk.LEFT)
+
+    def sort_tree(self):
+        print("hi")
+
+    def logout(self):
+        self.frame.pack_forget()
+        self.logout_button.pack_forget()
+        self.scrollbar.pack_forget()
+        self.tree.pack_forget()
+        self.root.quit()
 
 if __name__ == "__main__":
     LibrarySys()
