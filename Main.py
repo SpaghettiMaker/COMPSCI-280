@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 import tkinter.ttk as ttk
 import mysql.connector
-
+# works from uni computers
 #cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
                               #host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
 
