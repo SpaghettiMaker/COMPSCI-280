@@ -88,7 +88,7 @@ class Login:
 class TreeView:
     def __init__(self, root):
         self.root = root
-        self.frame = ttk.Frame(self.root, height=500)
+        self.frame = Canvas(self.root, height=500)
 
         self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3", "4", "5", "6"), show=("headings"))  # show headings means that a 'label' column (tree) is hidden
         self.tree.heading("1", text="Title")
@@ -121,21 +121,21 @@ class TreeView:
         return self.tree.item(self.tree.selection())["values"]
 
     def grid_tree(self):
-        self.frame.pack()
-        self.logout_button.pack(side=tk.BOTTOM)
-        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.frame.grid(column=0, row=0)
+        self.logout_button.grid(column=5, row=10)
+        self.scrollbar.grid(column=10, row=0, rowspan=10)
         # packs the scrollbar beside the treeview object. If you want to keep them together, put both in a frame
 
-        self.tree.pack(side=tk.LEFT)
+        self.tree.grid(column=0, row=0)
 
     def sort_tree(self):
         print("hi")
 
     def logout(self):
-        self.frame.pack_forget()
-        self.logout_button.pack_forget()
-        self.scrollbar.pack_forget()
-        self.tree.pack_forget()
+        self.frame.grid_forget()
+        self.logout_button.grid_forget()
+        self.scrollbar.grid_forget()
+        self.tree.grid_forget()
         self.root.quit()
 
 if __name__ == "__main__":
