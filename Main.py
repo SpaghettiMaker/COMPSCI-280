@@ -2,7 +2,12 @@ from tkinter import *
 import tkinter as tk
 from tkinter import messagebox
 import tkinter.ttk as ttk
+import mysql.connector
 
+#cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
+                              #host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
+
+#cursor = cnx.cursor()
 
 class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
     def __init__(self):
@@ -13,11 +18,10 @@ class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
         self.login = Login(self.screen_size, self.root, self.style)
         self.treeview = TreeView(self.root)
 
-        try:
-            while True:
-                self.start()
-        except:
-            pass
+        # place except block when finished
+
+        while True:
+            self.start()
 
     def start(self):
         self.login.grid()
@@ -88,7 +92,8 @@ class Login:
 class TreeView:
     def __init__(self, root):
         self.root = root
-        self.frame = Canvas(self.root, height=500)
+        self.root.title("just building")
+        self.frame = ttk.Frame(self.root)
 
         self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3", "4", "5", "6"), show=("headings"))  # show headings means that a 'label' column (tree) is hidden
         self.tree.heading("1", text="Title")
@@ -98,10 +103,15 @@ class TreeView:
         self.tree.heading("5", text="Location")
         self.tree.heading("6", text="Stock")
 
+        self.text1 = Label(text='Enter Title:')
+        self.search_entry = ttk.Entry(self.root)
         self.scrollbar = ttk.Scrollbar(self.frame, command=self.tree.yview)
         self.logout_button = ttk.Button(self.root, text="Exit", command=lambda: self.logout())
-
-        self.tree.insert("", "end", values=(1, 2, 3, 4, 5, 6))
+        self.search_button = ttk.Button(self.root, text="Search", command=lambda: self.search())
+        x = 0
+        while x != 100:
+            self.tree.insert("", "end", values=(x, 2, 3, 4, 5, 6))
+            x += 1
         self.tree.config(yscrollcommand=self.scrollbar.set)  # makes the scroll bar the correct size
         self.tree.bind("<Double-1>", self.on_double_click)
 
@@ -109,7 +119,7 @@ class TreeView:
         index = self.tree.selection()
         region = self.tree.identify("region", event.x, event.y)
         if region == "heading":  # if clicked on treeview heading
-            print("hi")
+            self.sort_tree()
         else:
             print("you clicked on", self.tree.item(index)["values"])
 
@@ -121,17 +131,25 @@ class TreeView:
         return self.tree.item(self.tree.selection())["values"]
 
     def grid_tree(self):
-        self.frame.grid(column=0, row=0)
-        self.logout_button.grid(column=5, row=10)
-        self.scrollbar.grid(column=10, row=0, rowspan=10)
-        # packs the scrollbar beside the treeview object. If you want to keep them together, put both in a frame
+        self.text1.grid(column=0, row=0, sticky='e')
+        self.search_entry.grid(column=1, row=0, columnspan=7, sticky='ew')
+        self.search_button.grid(column=8, row=0, sticky='ew')
+        self.frame.grid(column=0, row=1, columnspan=10, rowspan=10)
+        self.logout_button.grid(column=5, row=11)
+        self.scrollbar.grid(column=10, row=1, sticky='ns')  # use sticky for expanding
 
-        self.tree.grid(column=0, row=0)
+        self.tree.grid(column=0, row=1, sticky="nsew")
 
     def sort_tree(self):
-        print("hi")
+        print("sorted")
+
+    def search(self):
+        print("searched")
 
     def logout(self):
+        self.text1.grid_forget()
+        self.search_entry.grid_forget()
+        self.search_button.grid_forget()
         self.frame.grid_forget()
         self.logout_button.grid_forget()
         self.scrollbar.grid_forget()
