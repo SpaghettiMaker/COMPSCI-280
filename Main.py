@@ -1,13 +1,13 @@
 from tkinter import *
 import tkinter as tk
-from tkinter import messagebox
 import tkinter.ttk as ttk
-import mysql.connector
+#import mysql.connector
 # works from uni computers
 #cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
-                              #host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
+ #                             host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
 
 #cursor = cnx.cursor()
+
 
 class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
     def __init__(self):
@@ -40,6 +40,7 @@ class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
         self.treeview.grid_tree()
         self.root.mainloop()
         return
+
 
 class Login:
     def __init__(self, screen_size, root, style):
@@ -103,7 +104,6 @@ class TreeView:
 
         # create data entry
         self.data_entry = DataEntry()
-        self.data_entry.hide()
 
         self.enter_title_text = Label(text='Enter Title:')
         self.search_entry = ttk.Entry(self.root)
@@ -113,11 +113,11 @@ class TreeView:
         self.issue_book_button = ttk.Button(self.root, text="Issue Book", command=lambda: self.issue_book())
         self.reserve_book_button = ttk.Button(self.root, text="Reserve Book", command=lambda: self.reserve_book())
         self.return_book_button = ttk.Button(self.root, text="Return Book", command=lambda: self.return_book())
-        x = 0
-        #while x != 100:
-        #    self.tree.insert("", "end", values=(x, 2, 3, 4, 5))
-        #    x += 1
-        self.tree.insert("", "end", values=("Java for dummies", "Doug Lowe", "9781119247791", "John Wiley & Sons Inc", 1))
+
+        #cursor.execute("SELECT * FROM stu_xzho684_COMPSCI_280_C_S2_2017.LUNCH_ITEMS;")
+        #for data1, data2, data3, data4, data5 in cursor:
+        #    self.tree.insert("", "end", values=(data1, data2, data3, data4, data5))
+
         self.tree.config(yscrollcommand=self.scrollbar.set)  # makes the scroll bar the correct size
         self.tree.bind("<Double-1>", self.on_double_click)
 
@@ -156,11 +156,14 @@ class TreeView:
     def search(self):
         print("searched")
 
-    def issue_book(self):
+    def issue_book(self): # grid_data first then reveal the toplevel
+        self.data_entry.grid_issue_book_entry()
         self.data_entry.show()
 
         book = self.data_entry.get_data()
-        print("issuing book", book)
+        genre = self.data_entry.get_genre()
+        print("issuing book", book, genre)
+        self.data_entry.clear_data_fields()
 
     def reserve_book(self):
         selected_book = self.get_selected_items()
@@ -187,10 +190,13 @@ class TreeView:
 class DataEntry:
     def __init__(self):
         self.top = Toplevel()
+        self.variable = StringVar(self.top)
+        self.variable.set("Select Genre")  # default value
+
+        self.w = ttk.OptionMenu(self.top, self.variable, "", "one", "two", "three")
         self.entry_data = Entry(self.top)
-        self.entry_data.pack()
         self.button = Button(self.top, text="Confirm", command=lambda: self.hide())
-        self.button.pack()
+        self.top.withdraw()
 
     def show(self):
         self.top.deiconify()
@@ -202,6 +208,18 @@ class DataEntry:
 
     def get_data(self):
         return self.entry_data.get()
+
+    def get_genre(self):
+        return self.variable.get()
+
+    def grid_issue_book_entry(self):
+        self.button.pack()
+        self.entry_data.pack()
+        self.w.pack()
+
+    def clear_data_fields(self):
+        self.entry_data.delete(0, 'end')
+        self.variable.set("Select Genre")
 
 
 if __name__ == "__main__":
