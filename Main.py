@@ -1,12 +1,12 @@
 from tkinter import *
 import tkinter as tk
 import tkinter.ttk as ttk
-#import mysql.connector
+import mysql.connector
 # works from uni computers
 #cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
- #                             host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
-
-#cursor = cnx.cursor()
+#                              host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
+cnx = mysql.connector.connect(user='root', password='2244668800', host='127.0.0.1', port='3306', database='compsci 280')
+cursor = cnx.cursor()
 
 
 class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
@@ -95,18 +95,17 @@ class TreeView:
     def __init__(self, root):
         self.root = root
         self.frame = ttk.Frame(self.root)
-        self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3", "4", "5"), show=("headings"))  # show headings means that a 'label' column (tree) is hidden
-        self.tree.heading("1", text="Title")
-        self.tree.heading("2", text="Author")
-        self.tree.heading("3", text="IBSM")
-        self.tree.heading("4", text="Publisher")
-        self.tree.heading("5", text="Stock")
+        self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3"), show=("headings"))  # show headings means that a 'label' column (tree) is hidden
+        self.tree.heading("1", text="Book ID")
+        self.tree.heading("2", text="Title")
+        self.tree.heading("3", text="Author")
 
         # create data entry
         self.data_entry = DataEntry()
 
         self.enter_title_text = Label(text='Enter Title:')
         self.search_entry = ttk.Entry(self.root)
+        self.output_box = Text(self.root, height=10, font=('helvetica', 9), state='disabled')
         self.scrollbar = ttk.Scrollbar(self.frame, command=self.tree.yview)
         self.logout_button = ttk.Button(self.root, text="Exit", command=lambda: self.logout())
         self.search_button = ttk.Button(self.root, text="Search", command=lambda: self.search())
@@ -114,9 +113,10 @@ class TreeView:
         self.reserve_book_button = ttk.Button(self.root, text="Reserve Book", command=lambda: self.reserve_book())
         self.return_book_button = ttk.Button(self.root, text="Return Book", command=lambda: self.return_book())
 
-        #cursor.execute("SELECT * FROM stu_xzho684_COMPSCI_280_C_S2_2017.LUNCH_ITEMS;")
-        #for data1, data2, data3, data4, data5 in cursor:
-        #    self.tree.insert("", "end", values=(data1, data2, data3, data4, data5))
+        cursor.execute("SELECT BOOK_ID, TITLE, AUTHOR FROM books INNER JOIN genre, status_table "
+                       "WHERE books.GENRE = genre.GENRE_ID AND books.CURRENT_STATUS = status_table.STATUS_ID;")
+        for book_id, title, author in cursor:
+            self.tree.insert("", "end", values=(book_id, title, author))
 
         self.tree.config(yscrollcommand=self.scrollbar.set)  # makes the scroll bar the correct size
         self.tree.bind("<Double-1>", self.on_double_click)
@@ -138,22 +138,27 @@ class TreeView:
         return self.tree.item(self.tree.selection())["values"]
 
     def grid_tree(self):
-        self.issue_book_button.grid(column=2, row=11)
+        self.issue_book_button.grid(column=2, row=12)
         self.enter_title_text.grid(column=0, row=0, sticky='e')
         self.search_entry.grid(column=1, row=0, columnspan=7, sticky='ew')
         self.search_button.grid(column=8, row=0, sticky='ew')
         self.frame.grid(column=0, row=1, columnspan=10, rowspan=10)
-        self.reserve_book_button.grid(column=3, row=11)
-        self.return_book_button.grid(column=4, row=11)
-        self.logout_button.grid(column=5, row=11)
+        self.reserve_book_button.grid(column=3, row=12)
+        self.return_book_button.grid(column=4, row=12)
+        self.logout_button.grid(column=5, row=12)
         self.scrollbar.grid(column=10, row=1, sticky='ns')  # use sticky for expanding
-
+        self.output_box.grid(column=0, row=11, columnspan=9, sticky='ew')
         self.tree.grid(column=0, row=1, sticky="nsew")
 
     def sort_tree(self, column_id):
         print("sorted column", column_id)
 
     def search(self):
+        text = "hi"
+        self.output_box.config(state=NORMAL)
+        self.output_box.delete(1.0, END)
+        self.output_box.insert(END, text)
+        self.output_box.config(state=DISABLED)
         print("searched")
 
     def issue_book(self): # grid_data first then reveal the toplevel
