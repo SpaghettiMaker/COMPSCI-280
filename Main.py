@@ -1,6 +1,7 @@
 from tkinter import *
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 import mysql.connector
 # works from uni computers
 #cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
@@ -25,22 +26,26 @@ class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
 
     def start(self):
         self.login.grid()
-        self.root.title("boi image is just a placeholder")
+        self.root.title("image is just a logo placeholder")
         self.root.mainloop()
-        temp = self.login.get_state()  # if True show Librarianview if False show Userview
-        print(temp)
-        if temp:
+        is_admin = self.login.get_is_admin_state()  # if True show Librarianview if False show Userview
+
+        if is_admin:
+            print('show lib')
             self.show_librarianview()
         else:
-            pass
-        return
+            print('show user')
+            self.show_userview()
 
     def show_librarianview(self):
-        self.root.title("just building")
-        self.treeview.grid_tree()
+        self.root.title("just building librarian")
+        self.treeview.grid_librarian_tree()
         self.root.mainloop()
-        return
 
+    def show_userview(self):
+        self.root.title("just building user")
+        self.treeview.grid_user_tree()
+        self.root.mainloop()
 
 class Login:
     def __init__(self, screen_size, root, style):
@@ -52,12 +57,11 @@ class Login:
 
         self.login_button = ttk.Button(self.root, text="Login", command=lambda: self.login())
 
-        self.default_username = StringVar(self.root, value='Enter Username')
-        self.username = ttk.Entry(self.root, textvariable=self.default_username)
+        self.default_username = Label(self.root, text='Enter Username:', bg='white')
+        self.username = ttk.Entry(self.root)
 
-        self.default_password = StringVar(self.root, value='Enter Password')
-        self.password = ttk.Entry(self.root, textvariable=self.default_password)
-
+        self.default_password = Label(self.root, text='Enter Password:', bg='white')
+        self.password = ttk.Entry(self.root, show="*")
         self.is_admin = False
 
         self.photo = PhotoImage(file="placeholder.gif")
@@ -66,10 +70,12 @@ class Login:
 
     def grid(self):  # packs frame onto screen
         self.frame.grid(column=0, row=0, columnspan=10, rowspan=10)
-        self.login_button.grid(column=5, row=9)
-        self.username.grid(column=5, row=6)
-        self.password.grid(column=5, row=7)
-        self.logo.grid(column=5, row=0)
+        self.login_button.grid(column=4, row=9, columnspan=2)
+        self.username.grid(column=5, row=4)
+        self.default_username.grid(column=4, row=4)
+        self.password.grid(column=5, row=5)
+        self.default_password.grid(column=4, row=5)
+        self.logo.grid(column=3, row=0, columnspan=3)
 
     def forget(self):  # forgets the Frame
         self.frame.grid_forget()
@@ -77,17 +83,31 @@ class Login:
         self.password.grid_forget()
         self.username.grid_forget()
         self.logo.grid_forget()
+        self.username.delete(0, 'end')
+        self.password.delete(0, 'end')
         self.root.quit()
 
     def login(self):
         username = self.username.get()
         password = self.password.get()
-        print("username is:", username, "password is:", password)
         # Admin will be True and user will be False
-        self.forget()
-        self.is_admin = True
+        cursor.execute("SELECT USERNAME, IS_ADMIN FROM users WHERE USERNAME = '{}' "
+                       "AND PASSWORD = SHA2('{}{}', 256);".format(username, username, password))
 
-    def get_state(self):
+        user_exists = False
+        is_admin = False
+        for (username, is_admin) in cursor:
+            user_exists = True
+        if user_exists:
+            if is_admin:
+                self.is_admin = True
+            else:
+                self.is_admin = False
+            self.forget()
+        else:
+            messagebox.showinfo("Error", "Access Denied")
+
+    def get_is_admin_state(self):
         return self.is_admin
 
 
@@ -95,7 +115,7 @@ class TreeView:
     def __init__(self, root):
         self.root = root
         self.frame = ttk.Frame(self.root)
-        self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3"), show=("headings"))  # show headings means that a 'label' column (tree) is hidden
+        self.tree = ttk.Treeview(self.frame, columns=("1", "2", "3"), show='headings')
         self.tree.heading("1", text="Book ID")
         self.tree.heading("2", text="Title")
         self.tree.heading("3", text="Author")
@@ -137,13 +157,25 @@ class TreeView:
     def get_selected_items(self):
         return self.tree.item(self.tree.selection())["values"]
 
-    def grid_tree(self):
+    def grid_librarian_tree(self):
         self.issue_book_button.grid(column=2, row=12)
         self.enter_title_text.grid(column=0, row=0, sticky='e')
         self.search_entry.grid(column=1, row=0, columnspan=7, sticky='ew')
         self.search_button.grid(column=8, row=0, sticky='ew')
         self.frame.grid(column=0, row=1, columnspan=10, rowspan=10)
         self.reserve_book_button.grid(column=3, row=12)
+        self.return_book_button.grid(column=4, row=12)
+        self.logout_button.grid(column=5, row=12)
+        self.scrollbar.grid(column=10, row=1, sticky='ns')  # use sticky for expanding
+        self.output_box.grid(column=0, row=11, columnspan=9, sticky='ew')
+        self.tree.grid(column=0, row=1, sticky="nsew")
+
+    def grid_user_tree(self):
+        self.issue_book_button.grid(column=3, row=12)
+        self.enter_title_text.grid(column=0, row=0, sticky='e')
+        self.search_entry.grid(column=1, row=0, columnspan=7, sticky='ew')
+        self.search_button.grid(column=8, row=0, sticky='ew')
+        self.frame.grid(column=0, row=1, columnspan=10, rowspan=10)
         self.return_book_button.grid(column=4, row=12)
         self.logout_button.grid(column=5, row=12)
         self.scrollbar.grid(column=10, row=1, sticky='ns')  # use sticky for expanding
@@ -189,6 +221,7 @@ class TreeView:
         self.logout_button.grid_forget()
         self.scrollbar.grid_forget()
         self.tree.grid_forget()
+        self.output_box.grid_forget()
         self.root.quit()
 
 
