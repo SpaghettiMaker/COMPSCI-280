@@ -6,11 +6,11 @@ import mysql.connector
 # works from uni computers
 #cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
 #                              host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
-cnx = mysql.connector.connect(user='root', password='2244668800', host='127.0.0.1', port='3306', database='compsci 280')
+cnx = mysql.connector.connect(user='root', password='2244668800', host='127.0.0.1', port='3306', database='stu_xzho684_COMPSCI_280_C_S2_2017')
 cursor = cnx.cursor()
 
 
-class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
+class LibrarySys:  ###IMPORTANT### Do not close screens with X
     def __init__(self):
         self.root = Tk()
         self.screen_size = (400, 400)
@@ -20,30 +20,30 @@ class LibrarySys:  ###IMPORTANT### Do not close toplevel screens
         self.treeview = TreeView(self.root)
 
         # place except block when finished and dont use destroy to close windows
-
-        while True:
-            self.start()
+        try:
+            while True:
+                self.start()
+        except TclError:
+            print("Exiting Program")
 
     def start(self):
         self.login.grid()
-        self.root.title("image is just a logo placeholder")
+        self.root.title("Login (image is just a logo placeholder)")
         self.root.mainloop()
         is_admin = self.login.get_is_admin_state()  # if True show Librarianview if False show Userview
 
         if is_admin:
-            print('show lib')
             self.show_librarianview()
         else:
-            print('show user')
             self.show_userview()
 
     def show_librarianview(self):
-        self.root.title("just building librarian")
+        self.root.title("Librarian Screen")
         self.treeview.grid_librarian_tree()
         self.root.mainloop()
 
     def show_userview(self):
-        self.root.title("just building user")
+        self.root.title("User Screen")
         self.treeview.grid_user_tree()
         self.root.mainloop()
 
@@ -133,11 +133,6 @@ class TreeView:
         self.reserve_book_button = ttk.Button(self.root, text="Reserve Book", command=lambda: self.reserve_book())
         self.return_book_button = ttk.Button(self.root, text="Return Book", command=lambda: self.return_book())
 
-        cursor.execute("SELECT BOOK_ID, TITLE, AUTHOR FROM books INNER JOIN genre, status_table "
-                       "WHERE books.GENRE = genre.GENRE_ID AND books.CURRENT_STATUS = status_table.STATUS_ID;")
-        for book_id, title, author in cursor:
-            self.tree.insert("", "end", values=(book_id, title, author))
-
         self.tree.config(yscrollcommand=self.scrollbar.set)  # makes the scroll bar the correct size
         self.tree.bind("<Double-1>", self.on_double_click)
 
@@ -149,15 +144,30 @@ class TreeView:
             self.sort_tree(column_id)
         else:
             print("you clicked on", self.tree.item(index)["values"])
+            book_id = self.tree.item(index)["values"][0]
+            print(book_id)
+            self.get_output_box_data(book_id)
 
-    def button_click(self):
-        index = self.tree.selection()
-        print("you clicked on", self.tree.item(index)["values"])
+    def get_output_box_data(self, book_id):
+        self.output_box.config(state=NORMAL)
+        self.output_box.delete(1.0, END)
+        cursor.execute("SELECT BOOK_ID, TITLE, AUTHOR, genre.GENRE, IBSN, PUBLISHER, status_table.STATUS_TYPE "
+                       "FROM books INNER JOIN genre ON books.GENRE = genre.GENRE_ID "
+                       "INNER JOIN status_table ON books.CURRENT_STATUS = status_table.STATUS_ID "
+                       "WHERE BOOK_ID = {}".format(book_id))
+        for BOOK_ID, TITLE, AUTHOR, GENRE, IBSN, PUBLISHER, STATUS_TYPE in cursor:
+            self.output_box.insert(END, "ID: {}, {}, by {}, Genre: {}\n".format(BOOK_ID, TITLE, AUTHOR, GENRE))
+            self.output_box.insert(END, "IBSN: {}\n".format(IBSN))
+            self.output_box.insert(END, "Publisher: {}\n".format(PUBLISHER))
+            self.output_box.insert(END, "Status: {}".format(STATUS_TYPE))
+
+        self.output_box.config(state=DISABLED)
 
     def get_selected_items(self):
         return self.tree.item(self.tree.selection())["values"]
 
     def grid_librarian_tree(self):
+        self.get_data()
         self.issue_book_button.grid(column=2, row=12)
         self.enter_title_text.grid(column=0, row=0, sticky='e')
         self.search_entry.grid(column=1, row=0, columnspan=7, sticky='ew')
@@ -171,6 +181,7 @@ class TreeView:
         self.tree.grid(column=0, row=1, sticky="nsew")
 
     def grid_user_tree(self):
+        self.get_data()
         self.issue_book_button.grid(column=3, row=12)
         self.enter_title_text.grid(column=0, row=0, sticky='e')
         self.search_entry.grid(column=1, row=0, columnspan=7, sticky='ew')
@@ -183,32 +194,44 @@ class TreeView:
         self.tree.grid(column=0, row=1, sticky="nsew")
 
     def sort_tree(self, column_id):
-        print("sorted column", column_id)
+        print("sorting column UNFINISHED", column_id)
 
     def search(self):
-        text = "hi"
-        self.output_box.config(state=NORMAL)
-        self.output_box.delete(1.0, END)
-        self.output_box.insert(END, text)
-        self.output_box.config(state=DISABLED)
-        print("searched")
+        search = self.search_entry.get()
+        self.clear_tree()
+        cursor.execute("SELECT BOOK_ID, TITLE, AUTHOR FROM books INNER JOIN genre ON books.GENRE = genre.GENRE_ID "
+                       "INNER JOIN status_table ON books.CURRENT_STATUS = status_table.STATUS_ID "
+                       "WHERE TITLE LIKE '{}%';".format(search))
+        for book_id, title, author in cursor:
+            self.tree.insert("", "end", values=(book_id, title, author))
 
-    def issue_book(self): # grid_data first then reveal the toplevel
+    def get_data(self):
+        self.clear_tree()
+        cursor.execute("SELECT BOOK_ID, TITLE, AUTHOR FROM books INNER JOIN genre, status_table "
+                       "WHERE books.GENRE = genre.GENRE_ID AND books.CURRENT_STATUS = status_table.STATUS_ID;")
+        for book_id, title, author in cursor:
+            self.tree.insert("", "end", values=(book_id, title, author))
+
+    def clear_tree(self):
+        self.tree.delete(*self.tree.get_children())
+
+    def issue_book(self):  # grid_data first then reveal the toplevel
+        selected_book = self.get_selected_items()
+        print("issuing book", selected_book, "UNFINISHED")
+
+    def reserve_book(self):
+        selected_book = self.get_selected_items()
+        print("reserving book", selected_book, "UNFINISHED")
+
+    def return_book(self):
         self.data_entry.grid_issue_book_entry()
         self.data_entry.show()
 
         book = self.data_entry.get_data()
         genre = self.data_entry.get_genre()
-        print("issuing book", book, genre)
-        self.data_entry.clear_data_fields()
-
-    def reserve_book(self):
-        selected_book = self.get_selected_items()
-        print("reserving book", selected_book)
-
-    def return_book(self):
         # call DataEntry class
-        print("returning book")
+        print("returning book", book, "UNFINISHED")
+        self.data_entry.clear_data_fields()
 
     def logout(self):
         self.issue_book_button.grid_forget()
