@@ -3,9 +3,9 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 import mysql.connector
 
-#cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
-#                              host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
-cnx = mysql.connector.connect(user='root', password='2244668800', host='127.0.0.1', port='3306', database='stu_xzho684_COMPSCI_280_C_S2_2017')
+cnx = mysql.connector.connect(user='xzho684', password='f350bb3e',
+                              host='studdb-mysql.fos.auckland.ac.nz', port=3306, database='stu_xzho684_COMPSCI_280_C_S2_2017')
+#cnx = mysql.connector.connect(user='root', password='2244668800', host='127.0.0.1', port='3306', database='stu_xzho684_COMPSCI_280_C_S2_2017')
 cursor = cnx.cursor()
 
 
@@ -101,8 +101,8 @@ class Login:
         username = self.username.get()
         password = self.password.get()
         # Admin will be True and user will be False
-        cursor.execute("SELECT USERNAME, IS_ADMIN FROM users WHERE USERNAME = '{}' "
-                       "AND PASSWORD = SHA2('{}{}', 256);".format(username, username, password))
+        cursor.execute("SELECT USERNAME, IS_ADMIN FROM users "
+                       "WHERE USERNAME = '{}' AND PASSWORD = '{}';".format(username, password))
 
         user_exists = False
         is_admin = False
