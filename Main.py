@@ -12,7 +12,7 @@ cursor = cnx.cursor()
 class LibrarySys:  # ###IMPORTANT### Do not close screens with X
     """The main library system class is meant to control login screen and treeview screen"""
     def __init__(self):
-        """Contains references of all frames such as login and treeview screen"""
+        """Contains references of all frames such as login and treeview referencing screen"""
         self.root = Tk()
         self.screen_size = (400, 400)
         self.style = ttk.Style()
@@ -50,6 +50,7 @@ class LibrarySys:  # ###IMPORTANT### Do not close screens with X
         self.root.title("User Screen")
         self.treeview.grid_user_view()
         self.root.mainloop()
+
 
 class Login:
     """login screen with all entries, buttons and widgets associated with logging in"""
@@ -144,7 +145,9 @@ class TreeView:
         self.issue_book_button = ttk.Button(self.root, text="Issue Book", command=lambda: self.issue_book())
         self.reserve_book_button = ttk.Button(self.root, text="Reserve Book", command=lambda: self.reserve_book())
         self.return_book_button = ttk.Button(self.root, text="Return Book", command=lambda: self.return_book())
-
+        self.widgets = [self.enter_title_text, self.search_entry, self.output_box, self.scrollbar, self.logout_button,
+                        self.search_button, self.issue_book_button, self.reserve_book_button,
+                        self.return_book_button, self.tree, self.frame]
         self.tree.config(yscrollcommand=self.scrollbar.set)  # makes the scroll bar the correct size
         self.tree.bind("<Double-1>", self.on_double_click)
 
@@ -256,17 +259,9 @@ class TreeView:
 
     def logout(self):
         """grid forgets all widgets from treeview screen"""
-        self.issue_book_button.grid_forget()
-        self.reserve_book_button.grid_forget()
-        self.return_book_button.grid_forget()
-        self.enter_title_text.grid_forget()
-        self.search_entry.grid_forget()
-        self.search_button.grid_forget()
-        self.frame.grid_forget()
-        self.logout_button.grid_forget()
-        self.scrollbar.grid_forget()
-        self.tree.grid_forget()
-        self.output_box.grid_forget()
+        self.data_entry.hide()
+        for i in self.widgets:
+            i.grid_forget()
         self.root.quit()
 
 
@@ -286,7 +281,6 @@ class DataEntry:
     def show(self):
         """reveals the toplevel window"""
         self.top.deiconify()
-        self.top.mainloop()
 
     def hide(self):
         """hides the toplevel window"""
